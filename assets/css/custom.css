@@ -1,0 +1,22 @@
+.category-group {
+    margin-bottom: 2em;
+}
+
+.category-group h2 {
+    padding-bottom: 0.5em;
+    border-bottom: 1px solid #eee;
+}
+
+.category-group ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.category-group li {
+    margin-bottom: 0.5em;
+}
+
+.category-group li small {
+    color: #999;
+    margin-left: 0.5em;
+} 
