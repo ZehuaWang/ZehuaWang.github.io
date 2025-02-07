@@ -271,7 +271,27 @@ var coord2 = new Coordinate(3, 0);
 Console.WriteLine(coord1.CompareTo(coord2)); // Output: -1 (1+2 vs 3+0)
 {% endhighlight %}
 
+Advanced: Mixed Mutability
 
+{% highlight csharp %}
+public record struct User(string Username)
+{
+    public int LoginCount { get; set; } // Mutable property
+}
+
+// Usage
+var user = new User("alice") { LoginCount = 1 };
+user.LoginCount++; // Allowed
+Console.WriteLine(user); // Output: User { Username = alice, LoginCount = 2 }
+{% endhighlight %}
+
+When to use record struct:
+
+- Small, short-lived data structures (coordinates, DTOs)
+
+- Immutable data with readonly record struct
+
+- High-performance scenarios (avoid heap allocation)
 
 
 When to use record keyword:
