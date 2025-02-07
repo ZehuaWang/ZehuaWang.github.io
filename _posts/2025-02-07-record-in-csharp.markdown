@@ -203,6 +203,76 @@ Console.WriteLine(response);
 
 Examples of using **record struct**:
 
+Basic record struct declaration
+
+{% highlight csharp %}
+public record struct Point2D(int X, int Y); // Positional syntax (mutable by default)
+
+// Usage
+var point = new Point2D(5, 10);
+Console.WriteLine(point); // Output: Point2D { X = 5, Y = 10 }
+
+// Mutable properties (default for record structs)
+point.X = 20; // Allowed
+{% endhighlight %}
+
+Value based equality
+
+{% highlight csharp %}
+var p1 = new Point2D(3, 4);
+var p2 = new Point2D(3, 4);
+
+Console.WriteLine(p1 == p2); // Output: True (compares values, not references)
+{% endhighlight %}
+
+Immutable readonly record struct
+
+{% highlight csharp %}
+public readonly record struct Temperature(double Celsius)
+{
+    public double Fahrenheit => Celsius * 9 / 5 + 32; // Computed property
+}
+
+// Usage
+var temp = new Temperature(25);
+Console.WriteLine($"{temp.Celsius}°C = {temp.Fahrenheit}°F"); // 25°C = 77°F
+
+// temp.Celsius = 30; // Error: Init-only property (immutable)
+{% endhighlight %}
+
+Non-destructive mutation
+
+{% highlight csharp %}
+var originalPoint = new Point2D(2, 3);
+var modifiedPoint = originalPoint with { X = 5 };
+
+Console.WriteLine(modifiedPoint); // Output: Point2D { X = 5, Y = 3 }
+{% endhighlight %}
+
+Deconstruction
+
+{% highlight csharp %}
+var (x, y) = modifiedPoint; // Deconstruct into variables
+Console.WriteLine($"X: {x}, Y: {y}"); // Output: X: 5, Y: 3
+{% endhighlight %}
+
+Implementing Interfaces
+
+{% highlight csharp %}
+public readonly record struct Coordinate(int X, int Y) : IComparable<Coordinate>
+{
+    public int CompareTo(Coordinate other) => 
+        (X + Y).CompareTo(other.X + other.Y);
+}
+
+// Usage
+var coord1 = new Coordinate(1, 2);
+var coord2 = new Coordinate(3, 0);
+Console.WriteLine(coord1.CompareTo(coord2)); // Output: -1 (1+2 vs 3+0)
+{% endhighlight %}
+
+
+
 
 When to use record keyword:
 
