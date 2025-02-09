@@ -155,3 +155,30 @@ note: 通过使用await 线程不会被阻塞 可以去执行其他的任务 但
 In many scenarios, you want to start several independent tasks immediately. Then, as each task finishes, you can continue other work that's ready. 在许多情况下 我们想要同时启动所有的task 当每个task完成时 我们可以继续执行接下来的业务代码
 
 The System.Threading.Tasks.Task and related types are classes you can use to reason about tasks that are in progress. 我们可以使用Tasks类来代表正在进行的任务
+
+{% highlight csharp %}
+Coffee cup = PourCoffee();
+Console.WriteLine("Coffee is ready");
+
+Task<Egg> eggsTask = FryEggsAsync(2);
+Task<Bacon> baconTask = FryBaconAsync(3);
+Task<Toast> toastTask = ToastBreadAsync(2);
+
+Toast toast = await toastTask;
+ApplyButter(toast);
+ApplyJam(toast);
+Console.WriteLine("Toast is ready");
+Juice oj = PourOJ();
+Console.WriteLine("Oj is ready");
+
+Egg eggs = await eggsTask;
+Console.WriteLine("Eggs are ready");
+Bacon bacon = await baconTask;
+Console.WriteLine("Bacon is ready");
+
+Console.WriteLine("Breakfast is ready!");
+{% endhighlight %}
+
+The preceding code works better. **You start all the asynchronous tasks at once. You await each task only when you need the results.** The preceding code may be similar to code in a web application that makes requests to different microservices, then combines the results into a single page. You'll make all the requests immediately, then await all those tasks and compose the web page.
+
+note: <span style="color: green;">这种方法可以充分利用异步编程的优势 但是需要等待所有task完成 才能继续执行接下来的业务代码</span>
