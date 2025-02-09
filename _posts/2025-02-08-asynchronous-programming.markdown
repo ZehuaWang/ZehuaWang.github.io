@@ -179,6 +179,56 @@ Console.WriteLine("Bacon is ready");
 Console.WriteLine("Breakfast is ready!");
 {% endhighlight %}
 
-The preceding code works better. **You start all the asynchronous tasks at once. You await each task only when you need the results.** The preceding code may be similar to code in a web application that makes requests to different microservices, then combines the results into a single page. You'll make all the requests immediately, then await all those tasks and compose the web page.
+The preceding code works better. **You start all the asynchronous tasks at once. You await each task only when you need the results.** The preceding code may be similar to code in a web application that makes requests to different microservices, then combines the results into a single page. You'll make all the requests immediately, then await all those tasks and compose the web page. (比如一个web应用 需要请求不同的微服务 然后组合成一个页面 我们可以立即开始所有的请求 然后等待所有的请求完成 然后组合成一个页面)
 
 note: <span style="color: green;">这种方法可以充分利用异步编程的优势 但是需要等待所有task完成 才能继续执行接下来的业务代码</span>
+
+#### <span style="color: red;">Composition with tasks</span>
+
+Making the toast is the composition of an asynchronous operation (toasting the bread), and synchronous operations (adding the butter and the jam). Updating this code illustrates an important concept. 烤面包包括一个异步的过程和一个同步的过程
+
+note: <span style="color: green;">The composition of an asynchronous operation followed by synchronous work is an asynchronous operation. Stated another way, if any portion of an operation is asynchronous, the entire operation is asynchronous.</span>
+
+{% highlight csharp %}
+static async Task<Toast> MakeToastWithButterAndJamAsync(int number)
+{
+    var toast = await ToastBreadAsync(number);
+    ApplyButter(toast);
+    ApplyJam(toast);
+
+    return toast;
+}
+{% endhighlight %}
+
+The preceding method has the async modifier in its signature. That signals to the compiler that this method contains an await statement; it contains asynchronous operations. This method represents the task that toasts the bread, then adds butter and jam. This method returns a Task<TResult> that represents the composition of those three operations. 
+
+前面的代码使用async来修饰这个方法 表示这个方法包含await语句 包含异步操作 这个方法表示烤面包 然后添加黄油和果酱 这个方法返回一个Task<TResult> 表示这三个操作的组合
+
+{% highlight csharp %}
+static async Task Main(string[] args)
+{
+    Coffee cup = PourCoffee();
+    Console.WriteLine("coffee is ready");
+
+    var eggsTask = FryEggsAsync(2);
+    var baconTask = FryBaconAsync(3);
+    var toastTask = MakeToastWithButterAndJamAsync(2);
+
+    var eggs = await eggsTask;
+    Console.WriteLine("eggs are ready");
+
+    var bacon = await baconTask;
+    Console.WriteLine("bacon is ready");
+
+    var toast = await toastTask;
+    Console.WriteLine("toast is ready");
+
+    Juice oj = PourOJ();
+    Console.WriteLine("oj is ready");
+    Console.WriteLine("Breakfast is ready!");
+}
+{% endhighlight %}
+
+**The previous change illustrated an important technique for working with asynchronous code. You compose tasks by separating the operations into a new method that returns a task. You can choose when to await that task. You can start other tasks concurrently.**
+
+note: 前面的代码演示了异步编程的一个重要技术 通过将操作分离成一个返回任务的新方法 可以选择何时等待该任务 可以并发启动其他任务
