@@ -5,6 +5,8 @@ date:   2025-02-07 00:00:00 -0500
 categories: C#
 ---
 
+[Async programming](https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/)
+
 The Task asynchronous programming model (TAP) provides an abstraction over asynchronous code. You write code as a sequence of statements, just like always. You can read that code as though each statement completes before the next begins. The compiler performs many transformations because some of those statements may start work and return a **Task that represents the ongoing work**.
 
 Enable code that reads like a sequence of statements, but executes in a much more complicated order based on external resource allocation and when tasks are complete.
@@ -232,3 +234,125 @@ static async Task Main(string[] args)
 **The previous change illustrated an important technique for working with asynchronous code. You compose tasks by separating the operations into a new method that returns a task. You can choose when to await that task. You can start other tasks concurrently.**
 
 note: 前面的代码演示了异步编程的一个重要技术 通过将操作分离成一个返回任务的新方法 可以选择何时等待该任务 可以并发启动其他任务
+
+#### <span style="color: red;">Asynchronous exceptions</span>
+
+Asynchronous methods throw exceptions, just like their synchronous counterparts. Asynchronous support for exceptions and error handling strives for the same goals as asynchronous support in general: You should write code that reads like a series of synchronous statements. Tasks throw exceptions when they can't complete successfully. The client code can catch those exceptions when a started task is awaited.
+
+When a task that runs asynchronously throws an exception, that Task is faulted. The Task object holds the exception thrown in the Task.Exception property. Faulted tasks throw an exception when they're awaited.
+
+The Task.Exception property is a System.AggregateException because more than one exception may be thrown during asynchronous work. Any exception thrown is added to the AggregateException.InnerExceptions collection.
+
+The most common scenario for a faulted task is that the Exception property contains exactly one exception. When code awaits a faulted task, the first exception in the AggregateException.InnerExceptions collection is rethrown.
+
+#### <span style="color: red;">Await tasks efficiently</span>
+
+The series of await statements at the end of the preceding code can be improved by using methods of the Task class. One of those APIs is WhenAll, which returns a Task that completes when all the tasks in its argument list have completed.
+
+{% highlight csharp %}
+await Task.WhenAll(eggsTask, baconTask, toastTask);
+Console.WriteLine("Eggs are ready");
+Console.WriteLine("Bacon is ready");
+Console.WriteLine("Toast is ready");
+Console.WriteLine("Breakfast is ready!");
+{% endhighlight %}
+
+Another option is to use WhenAny, which returns a Task<Task> that completes when any of its arguments complete. You can await the returned task, knowing that it has already finished.
+
+{% highlight csharp %}
+var breakfastTasks = new List<Task> { eggsTask, baconTask, toastTask };
+while (breakfastTasks.Count > 0)
+{
+    Task finishedTask = await Task.WhenAny(breakfastTasks);
+    if (finishedTask == eggsTask)
+    {
+        Console.WriteLine("Eggs are ready");
+    }
+    else if (finishedTask == baconTask)
+    {
+        Console.WriteLine("Bacon is ready");
+    }
+    else if (finishedTask == toastTask)
+    {
+        Console.WriteLine("Toast is ready");
+    }
+    await finishedTask;
+    breakfastTasks.Remove(finishedTask);
+}
+{% endhighlight %}
+
+Near the end, you see the line await finishedTask;. **The line await Task.WhenAny doesn't await the finished task. It awaits the Task returned by Task.WhenAny. The result of Task.WhenAny is the task that has completed (or faulted). You should await that task again, even though you know it's finished running**. That's how you retrieve its result, or ensure that the exception causing it to fault gets thrown.
+
+#### Task WhenAll API
+
+使用场景如下
+
+并行执行多个独立的任务
+
+当需要发起多个互不依赖的异步操作时 用Task.WhenAll并行处理 可以大幅度减少总耗时
+
+场景
+
+同步调用多个API
+批量读取 写入文件
+并发数据库查询
+
+{% highlight csharp %}
+var task1 = DownloadFileAsync("url1");
+var task2 = DownloadFileAsync("url2");
+var task3 = DownloadFileAsync("url3");
+
+// 并行等待所有下载完成
+var results = await Task.WhenAll(task1, task2, task3);
+Console.WriteLine($"下载了 {results.Length} 个文件");
+{% endhighlight %}
+
+组合多个任务结果
+
+当需要合并多个任务的结果时 使用Task.WhenAll
+
+{% highlight csharp %}
+
+async Task<int> GetStockAsync(string symbol) { /*...*/ }
+
+var tasks = new List<Task<int>> 
+{
+    GetStockAsync("AAPL"),
+    GetStockAsync("MSFT"),
+    GetStockAsync("GOOGL")
+};
+
+int[] prices = await Task.WhenAll(tasks);
+int total = prices.Sum(); // 直接使用所有结果
+{% endhighlight %}
+
+处理异常
+
+当需要捕获多个任务中可能出现的所有异常时
+
+{% highlight csharp %}
+try
+{
+    await Task.WhenAll(task1, task2, task3);
+}
+catch (AggregateException ae)
+{
+    foreach (var ex in ae.InnerExceptions)
+    {
+        Console.WriteLine($"错误: {ex.Message}");
+    }
+}
+{% endhighlight %}
+
+优化资源的利用率
+
+避免用await逐个等待任务 防止线程阻塞
+
+{% highlight csharp %}
+// ❌ 低效写法（串行）
+var result1 = await task1;
+var result2 = await task2;
+
+// ✅ 高效写法（并行）
+await Task.WhenAll(task1, task2);
+{% endhighlight %}
