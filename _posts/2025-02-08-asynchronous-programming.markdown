@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Asynchronous programming in C#"
-date:   2025-02-07 00:00:00 -0500
+date:   2025-02-08 00:00:00 -0500
 categories: C#
 ---
 
@@ -356,3 +356,84 @@ var result2 = await task2;
 // ✅ 高效写法（并行）
 await Task.WhenAll(task1, task2);
 {% endhighlight %}
+
+#### Task WhenAny API
+
+竞速条件 Race Condition
+
+当需要多个任务并行执行 但只需要第一个完成的结果时使用 例如
+
+同时请求多个服务 天气接口 股票数据源 取最快的响应结果
+
+实现冗余调用 提升系统的响应速度
+
+{% highlight csharp %}
+var task1 = FetchDataFromServiceAAsync();
+var task2 = FetchDataFromServiceBAsync();
+var completedTask = await Task.WhenAny(task1, task2);
+var result = await completedTask; // 处理第一个成功返回的数据
+{% endhighlight %}
+
+超时处理
+
+结合Task.Delay实现超时控制 避免无限等待
+
+{% highlight csharp %}
+var dataTask = FetchDataAsync();
+var timeoutTask = Task.Delay(TimeSpan.FromSeconds(5));
+
+var completedTask = await Task.WhenAny(dataTask, timeoutTask);
+if (completedTask == timeoutTask)
+{
+    throw new TimeoutException("操作超时！");
+}
+var result = await dataTask; // 正常处理数据
+{% endhighlight %}
+
+动态任务处理
+
+当需要处理动态生成的任务集合 并逐个处理完成的任务时
+
+{% highlight csharp %}
+var downloads = new List<Task<byte[]>>();
+while (downloads.Count > 0)
+{
+    var finishedDownload = await Task.WhenAny(downloads);
+    downloads.Remove(finishedDownload);
+    var data = await finishedDownload;
+    ProcessData(data);
+}
+{% endhighlight %}
+
+任务进度监控
+
+监控一组任务的完成进度 实时更新状态
+
+{% highlight csharp %}
+var tasks = new List<Task>();
+foreach (var item in items)
+{
+    tasks.Add(ProcessItemAsync(item));
+}
+
+while (tasks.Count > 0)
+{
+    var finishedTask = await Task.WhenAny(tasks);
+    tasks.Remove(finishedTask);
+    Log($"已完成 {tasks.Count} / {items.Count}");
+}
+{% endhighlight %}
+
+注意事项
+
+异常处理 Task.WhenAny 返回的任务可能是失败任务 需要显式检查状态或者调用await捕获异常
+
+资源管理 若后续不需要其他未完成的任务 应显式取消 CancellationToken 避免资源浪费
+
+结果顺序 Task.WhenAny 不保证返回的任务是集合中第一个启动的任务 仅表示最快完成的
+
+何时选择 WhenAny VS WhenAll
+
+WhenAny 关注单个任务的快速完成 - 竞速 超时
+
+WhenAll 需要所有任务完成后的聚合结果 - 批量计算后的汇总
