@@ -206,3 +206,52 @@ The marked async method can use await to designate suspension points. The await 
 The marked async method can itself be awaited by methods that call it.
 
 如果async方法中不包含await 那么它和同步方法没什么区别 不会带来性能提升
+
+#### Return types and parameters
+
+返回类型
+
+Task<TResult>：当方法包含返回具体类型值的return语句时使用
+Task：当方法没有返回值或只有空return语句时使用
+void：主要用于事件处理（但无法被await且异常难以捕获）
+其他类型：需包含GetAwaiter方法（如ValueTask<TResult>）
+
+核心特性
+
+使用await操作符处理异步任务
+返回的Task对象封装异步操作状态（包括最终结果或异常）
+不能声明in/ref/out参数
+不能通过引用返回值
+
+调用方式
+
+{% highlight csharp %}
+// 带返回值的异步方法
+Task<int> task1 = GetTaskOfTResultAsync();
+int result = await task1;
+
+// 无返回值的异步方法
+Task task2 = GetTaskAsync();
+await task2;
+
+// 单行简写
+int result = await GetTaskOfTResultAsync();
+{% endhighlight %}
+
+注意事项
+
+void返回类型异步方法不能等待
+
+调用方无法捕获void异步方法的异常
+
+推荐优先使用Task/Task<TResult>作为返回类型
+
+#### Naming Convention
+
+返回可等待类型（如Task/Task<T>/ValueTask等）的方法应以"Async"结尾
+
+仅启动异步操作但不返回可等待类型的方法不应以"Async"结尾，但可用"Begin"、"Start"等动词开头表明特性
+
+当存在事件、基类或接口约定的命名冲突时（如常见的事件处理程序OnButtonClick），允许例外情况不遵循上述规则
+
+
