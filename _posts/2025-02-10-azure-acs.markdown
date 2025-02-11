@@ -1,0 +1,40 @@
+---
+layout: post
+title:  "Azure Communication Service"
+date:   2025-02-10 00:00:00 -0500
+categories: Azure-ACS
+---
+
+#### Server Call ID
+
+In the context of Azure Communication Services (ACS), a Server Call ID (serverCallId) is a unique identifier assigned to a specific call session. This ID is critical for server-side operations such as call recording, diagnostics, or integration with external systems.
+
+Example use case: In call recording, serverCallId is required to interact with Azure's recording APIs to manage recording sessions programmatically.
+
+#### Call Correlation ID
+
+在 Azure Communication Services (ACS) 中，Call Correlation ID 是用于跨系统追踪通话全生命周期的唯一标识符。它与 Server Call ID 的关系和使用场景如下：
+
+**跨系统追踪**：当通话涉及多个 Azure 服务（如 ACS、Azure Functions、Event Grid）时，通过 Correlation ID 可以关联所有相关日志
+**错误诊断**：在分布式系统中快速定位故障点（如媒体流问题、信令连接失败）
+**业务集成**：与企业现有监控系统对接时作为统一追踪标识
+
+{% highlight csharp %}
+// 在通话建立时获取
+var call = callAgent.StartCallAsync(participants);
+var correlationId = call.GetCallCorrelationId();
+// 在事件回调中获取
+call.OnStateChanged += (sender, args) => {
+var diagnosticInfo = args.CallDiagnostics;
+Console.WriteLine($"CorrelationID: {diagnosticInfo.CorrelationId}");
+};
+{% endhighlight %}
+
+典型应用场景：
+- 将通话的 ACS 日志与 Application Insights 日志关联
+- 追踪跨 Azure 资源组/订阅的通话问题
+- 第三方系统（如 CRM）与 ACS 的集成追踪
+
+与 Server Call ID 的区别：
+- **Server Call ID**：ACS 内部通话实例的唯一标识（作用域：单个通话）
+- **Correlation ID**：跨系统/服务追踪的全局标识（作用域：端到端业务流程）
