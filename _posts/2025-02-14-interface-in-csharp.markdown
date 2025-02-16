@@ -31,7 +31,7 @@ categories: C#
 
 示例说明
 
-1. 接口定义
+接口定义
 
 {% highlight csharp %}
 public interface ILogger
@@ -44,7 +44,7 @@ public interface ILogger
 }
 {% endhighlight %}
 
-2. 类实现接口
+类实现接口
 
 {% highlight csharp %}
 public class FileLogger : ILogger
@@ -60,7 +60,7 @@ public class FileLogger : ILogger
 }
 {% endhighlight %}
 
-3. 结构体实现接口
+结构体实现接口
 
 {% highlight csharp %}
 public struct ConsoleLogger : ILogger
