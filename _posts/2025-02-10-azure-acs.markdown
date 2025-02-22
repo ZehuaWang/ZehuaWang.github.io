@@ -38,3 +38,6 @@ Console.WriteLine($"CorrelationID: {diagnosticInfo.CorrelationId}");
 与 Server Call ID 的区别：
 - **Server Call ID**：ACS 内部通话实例的唯一标识（作用域：单个通话）
 - **Correlation ID**：跨系统/服务追踪的全局标识（作用域：端到端业务流程）
+
+
+#### Add real-time transcription into your application

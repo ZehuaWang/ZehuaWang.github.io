@@ -1,0 +1,42 @@
+---
+layout: post
+title:  "Working notes"
+date:   2025-02-15 00:00:00 -0500
+categories: work
+---
+
+#### Expose port 8080 on Http protocol
+
+Add the following code in Program.cs
+
+{% highlight csharp %}
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.ListenAnyIP(8080);
+});
+{% endhighlight %}
+
+#### Command for health API
+
+````
+curl http://localhost:8080/health/readiness
+````
+
+#### Efficient Debug on Visual Studio
+
+<span style="color:green">Use the watch window under the variables debug tab to debug the variables.</span>
+
+#### Use the tail -f log function on Notepad++
+
+The log file location is: C:\dev\Sporch-Latest\CRM.Omnichannel\out\Debug-AnyCPU\Microsoft.CRM.Omnichannel.Sporch.Main\net8.0\sporch_logs.log
+
+#### Important class
+
+<span style="color:red">AcsAudioController</span>
+
+This class is used to handle the websocket connection and the audio stream from ACS.
+
+#### Port forwarding
+
+On the devbox, only use ngrok for port forwarding. The ngrok could hanlde websocket connection.
+
