@@ -40,3 +40,51 @@ This class is used to handle the websocket connection and the audio stream from 
 
 On the devbox, only use ngrok for port forwarding. The ngrok could hanlde websocket connection.
 
+#### Enable local log files for Sporch Service
+
+It's off by default and can be turned on by setting: SporchMain->EnableLocalFileLogging 
+ 
+This will enable the logs to be sent to a local file facilitating logs analysis.
+
+The file is located under 
+
+out\Debug-AnyCPU\Microsoft.CRM.Omnichannel.Sporch.Main\net8.0\sporch_logs.log if you are running in debug
+
+out\Release-AnyCPU\Microsoft.CRM.Omnichannel.Sporch.Main\net8.0\sporch_logs.log if you are running in release
+ 
+in my case: 
+
+C:\work\sporch\CRM.Omnichannel\out\Debug-AnyCPU\Microsoft.CRM.Omnichannel.Sporch.Main\net8.0\sporch_logs.log
+
+since my git root is under C:\work\sporch\CRM.Omnichannel\
+  
+Few things;
+
+- the logs keeps appending to the same file from run to run
+- I didn't configure any file max size or fancy file journaling
+- I typically manually delete the file between runs
+
+#### 套接字文件
+
+套接字文件（Socket File）是 Unix/Linux 系统中用于进程间通信（IPC）的特殊文件类型。
+
+核心作用:
+
+实现同一主机上的进程间通信
+
+相比网络套接字，不经过网络协议栈，性能更高
+
+通过文件系统路径进行寻址
+
+在 Azure 监控中的典型应用:
+
+graph LR
+  A[应用程序日志] --> B(Fluentd/Fluent Bit)
+  B -->|通过套接字文件| C[Azure Monitor Agent]
+  C --> D[Azure Log Analytics]
+
+与普通文件的区别：
+
+- 不存储实际数据，只作为通信端点
+- 使用 AF_UNIX 套接字地址族
+- 通信双方必须都在同一主机上
