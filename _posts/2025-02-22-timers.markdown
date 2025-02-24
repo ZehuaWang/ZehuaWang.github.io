@@ -1,0 +1,93 @@
+---
+layout: post
+title:  "Timers"
+date:   2025-02-22 00:00:00 -0500
+categories: C#
+---
+
+#### The System.Threading.Timer class
+
+核心功能
+
+定时回调机制
+
+    可持续周期性调用委托（按固定间隔）
+    
+    也可单次调用委托（通过设置间隔为 Timeout.Infinite）
+
+执行上下文
+
+    回调方法在 ThreadPool 线程 上异步执行
+
+    需注意线程安全问题（如共享资源访问需加锁）
+
+关键配置参数
+
+TimerCallback 要执行的回调方法委托（必需）
+
+state 传递给回调方法的上下文对象（可选）
+
+dueTime 首次调用前的延迟时间（毫秒，0 表示立即）
+
+period 后续调用的间隔时间（毫秒，Timeout.Infinite 表示单次执行）
+
+生命周期控制
+
+启动定时器：通过构造函数初始化时自动启动
+
+停止定时器：调用 Dispose() 方法释放资源
+
+修改参数：通过 Change(dueTime, period) 方法动态调整
+
+经典使用场景
+
+{% highlight csharp %}
+   // 网络心跳检测（每5秒发送一次）
+   var heartbeatTimer = new Timer(_ => {
+       if (!Socket.Connected) return;
+       SendHeartbeatPacket();
+   }, null, 5000, 5000);
+{% endhighlight %}
+
+#### The System.Timers.Timer class
+
+核心特性
+
+1. **多线程支持**  
+   - 默认在 `ThreadPool` 线程触发事件  
+   - 适合多线程环境下的定时任务  
+
+2. **事件驱动模型**  
+   - 通过 `Elapsed` 事件定义回调逻辑  
+   - 支持多订阅者模式（可绑定多个事件处理器）
+
+基础使用示例
+
+{% highlight csharp %}
+var timer = new System.Timers.Timer(2000); // 2秒间隔
+timer.Elapsed += (sender, e) => {
+    Console.WriteLine($"触发时间: {e.SignalTime}");
+};
+timer.AutoReset = false;  // 单次触发
+timer.Enabled = true;     // 启动定时器
+
+// 手动重启（单次触发模式下）
+timer.Elapsed += (s, e) => {
+    timer.Interval = 3000;  // 动态调整间隔
+    timer.Start();          // 重新激活
+};
+{% endhighlight %}
+
+System.Threading.Timer 与 System.Timers.Timer 的核心对比
+
+| 特性                | System.Threading.Timer                  | System.Timers.Timer                    |
+|---------------------|-----------------------------------------|-----------------------------------------|
+| **所属命名空间**     | `System.Threading`                      | `System.Timers`                        |
+| **底层实现**         | 基于线程池的轻量级实现                   | 封装了 `System.Threading.Timer`，添加事件机制 |
+| **执行线程**         | 始终在 `ThreadPool` 线程执行             | 默认在 `ThreadPool`，可通过 `SynchronizingObject` 同步到UI线程 |
+| **异常处理**         | 异常会终止定时器（需手动捕获）           | 异常会触发 `Elapsed` 事件，可通过 `OnError` 扩展处理 |
+| **启停控制**         | 通过 `Change` 方法或 `Dispose`           | 通过 `Enabled` 属性和 `Start()`/`Stop()` 方法 |
+| **精度**             | 约 15-30ms（依赖线程池调度）             | 同左，但受事件机制影响略高               |
+| **资源占用**         | 更低（约 1KB 内存）                      | 更高（约 3-5KB，含事件开销）              |
+| **线程安全**         | 需自行处理                               | 内置同步机制（通过 `SynchronizingObject`） |
+| **典型场景**         | 高频/后台任务、服务端应用                 | UI 应用、需要事件绑定的场景               |

@@ -1,0 +1,14 @@
+---
+layout: post
+title:  "Work TODOs"
+date:   2025-02-22 00:00:00 -0500
+categories: work
+---
+
+#### Todo
+
+##### Logs and Metrics
+
+- [ ] Pull request review
+- [ ] Test if the exception is logged in the Sporch using OpenTelemetry configurations
+- [ ] Test on the K8S cluster to see if the logs contains correct schema and exceptions
